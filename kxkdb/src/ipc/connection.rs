@@ -458,6 +458,7 @@ impl QStream {
                     false,
                 ))
             }
+            #[cfg(unix)]
             ConnectionMethod::UDS => {
                 let stream = connect_uds(port, credential).await?;
                 Ok(QStream::new(
@@ -466,6 +467,10 @@ impl QStream {
                     false,
                     true,
                 ))
+            }
+            #[cfg(not(unix))]
+            ConnectionMethod::UDS => {
+                panic!("Unix domain socket not supported on this platform");
             }
         }
     }
@@ -581,6 +586,7 @@ impl QStream {
                     .await?;
                 Ok(qstream)
             }
+            #[cfg(unix)]
             ConnectionMethod::UDS => {
                 // Build a socket file path
                 let sockfile_ = create_sockfile_path(port);
@@ -596,6 +602,10 @@ impl QStream {
                 }
                 // UDS is always a local connection
                 Ok(QStream::new(Box::new(socket), method, true, true))
+            }
+            #[cfg(not(unix))]
+            ConnectionMethod::UDS => {
+                panic!("Unix domain socket not supported on this platform");
             }
         }
     }
@@ -785,6 +795,7 @@ impl QStreamInner for TlsStream<TcpStream> {
     }
 }
 
+#[cfg(unix)]
 #[async_trait]
 impl QStreamInner for UnixStream {
     /// Close a handle to a q process which is connected with Unix Domain Socket.
